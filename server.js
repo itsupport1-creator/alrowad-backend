@@ -9,7 +9,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// الاتصال بقاعدة البيانات SQLite
 const dbPath = path.join(__dirname, 'school_event.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -19,8 +18,40 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// إنشاء جدول قائمة الانتظار
+// إنشاء الجداول تلقائياً إن لم تكن موجودة لتفادي أي خطأ
 db.serialize(() => {
+    db.run(`
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            national_id TEXT,
+            family_id TEXT,
+            student_name TEXT,
+            grade TEXT,
+            section TEXT,
+            school TEXT,
+            curriculum TEXT
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS teachers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            subject TEXT,
+            building TEXT,
+            room TEXT,
+            status TEXT DEFAULT 'available'
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS student_teachers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER,
+            teacher_id INTEGER
+        )
+    `);
+
     db.run(`
         CREATE TABLE IF NOT EXISTS queues (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +72,6 @@ app.get('/api/search', (req, res) => {
         return res.status(400).json({ success: false, message: 'مطلوب إدخال رقم للبحث' });
     }
 
-    // البحث بالأرقام عن العائلة
     const sql = `
         SELECT s.*, t.id as teacher_id, t.name as teacher_name, t.subject, t.building, t.room, t.status as teacher_status
         FROM students s
@@ -55,11 +85,10 @@ app.get('/api/search', (req, res) => {
             return res.status(500).json({ success: false, error: err.message });
         }
 
-        if (rows.length === 0) {
+        if (!rows || rows.length === 0) {
             return res.json({ success: false, message: 'لم يتم العثور على سجلات' });
         }
 
-        // تجميع النتائج
         const studentsMap = {};
         let familyId = rows[0].family_id;
 
