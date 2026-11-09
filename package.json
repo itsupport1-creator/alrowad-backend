@@ -1,16 +1,14 @@
 {
-  "name": "alrowad-parent-portal",
-  "version": "1.0.0",
-  "description": "بوابة اجتماع أولياء الأمور - مدارس أكاديمية الرواد الدولية",
+  "name": "alrowad-backend",
+  "version": "2.0.0",
+  "description": "API Backend for Alrowad Parent Meeting Portal",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "import": "node importData.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "sqlite3": "^5.1.6",
-    "xlsx": "^0.18.5"
+    "sqlite3": "^5.1.6"
   }
 }
